@@ -1,0 +1,244 @@
+
+                  ﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂ
+                          SOURCER DEFINITION FILE
+                  ‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹
+
+ ±±±±±±±±±±±±±±±±±± Section 1: CONTROL INFORMATION   ±±±±±±±±±±±±±±±±±±
+
+Analysis Options = a b c d e f g h i j k l m n o p q r s t u v w x y z
+uP               = 8088
+File format      = lst
+Label type       = Decimal
+Remarks          = All
+Segment display  = Hex
+Target Assembler = NONE
+Code style       = Fragment
+Drive (output)   = Z
+Output filename  = temp.lst
+Passes           = 2
+Xref             = OFF
+
+
+
+ ±±±±±±±±±±±±±±±±±± Section 2: RANGE DEFINITION      ±±±±±±±±±±±±±±±±±±
+
+ ÕÕÕÕ Segments ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+
+  begin      end      default	   seg	 seg          seg
+ seg:off     off     ds     es	   type	 size         value
+ -------     ----    ----   ----   ----- -----        -----
+020A:0746    1111    020A   020A   auto	 use16       ; 020A
+
+ ±±±±±±±±±±±±±±±±±± Section 3: REFERENCE DEFINITIONS ±±±±±±±±±±±±±±±±±±
+
+ ÕÕÕÕ Subroutines ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+  seg:off    type & options	labels & comments
+  -------    --------------	----------------------------------------------
+020A:07B9    sub			       ; sub_1
+020A:07D9    sub			       ; sub_2
+020A:0806    sub			       ; sub_3
+020A:0870    sub			       ; sub_4
+020A:0B20    sub			       ; sub_5
+020A:0B4C    sub			       ; sub_6
+020A:0B5B    sub			       ; sub_7
+020A:0B74    sub			       ; sub_8
+020A:0BBB    sub			       ; sub_9
+020A:0BC8    sub			       ; sub_10
+020A:0E3F    sub			       ; sub_11
+020A:0E45    sub			       ; sub_12
+020A:0EBA    sub			       ; sub_13
+020A:0FE6    sub			       ; sub_14
+020A:1020    sub			       ; sub_15
+020A:1089    sub			       ; sub_16
+020A:1091    sub			       ; sub_17
+020A:1114    sub			       ; sub_18
+
+ ÕÕÕÕ Locations ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+  seg:off    type & options	labels & comments
+  -------    --------------	----------------------------------------------
+020A:0760    loc			       ; loc_1
+020A:077C    loc			       ; loc_2
+020A:078E    loc			       ; loc_3
+020A:07A3    loc			       ; loc_4
+020A:07A5    loc			       ; loc_5
+020A:07D0    loc			       ; loc_6
+020A:07D5    loc			       ; loc_7
+020A:07D8    loc			       ; loc_ret_8
+020A:07F8    loc			       ; loc_9
+020A:07FD    loc			       ; loc_10
+020A:0800    loc			       ; loc_ret_11
+020A:0855    loc			       ; loc_12
+020A:0860    loc			       ; loc_13
+020A:086B    loc			       ; loc_14
+020A:0898    loc			       ; loc_15
+020A:08B6    loc			       ; loc_16
+020A:08D3    loc			       ; loc_17
+020A:08DE    loc			       ; loc_18
+020A:08ED    loc			       ; loc_19
+020A:08F3    loc			       ; loc_20
+020A:090E    loc			       ; loc_21
+020A:0915    loc			       ; loc_22
+020A:0918    loc			       ; loc_23
+020A:091B    loc			       ; loc_24
+020A:0938    loc			       ; loc_25
+020A:0948    loc			       ; loc_26
+020A:0950    loc			       ; loc_27
+020A:0955    loc			       ; loc_28
+020A:0958    loc			       ; locloop_29
+020A:0974    loc			       ; loc_30
+020A:0983    loc			       ; loc_31
+020A:0991    loc			       ; loc_32
+020A:099A    loc			       ; loc_33
+020A:09D6    loc			       ; loc_34
+020A:09EE    loc			       ; loc_35
+020A:09F3    loc			       ; loc_36
+020A:09F8    loc			       ; loc_37
+020A:0A13    loc			       ; loc_38
+020A:0A18    loc			       ; loc_39
+020A:0A2A    loc			       ; loc_40
+020A:0A35    loc			       ; loc_41
+020A:0A3F    loc			       ; loc_42
+020A:0A52    loc			       ; loc_43
+020A:0A75    loc			       ; loc_44
+020A:0A90    loc			       ; loc_45
+020A:0AA9    loc			       ; loc_46
+020A:0AB1    loc			       ; loc_47
+020A:0AB6    loc			       ; loc_48
+020A:0AC6    loc			       ; loc_49
+020A:0AE7    loc			       ; loc_50
+020A:0AF9    loc			       ; loc_51
+020A:0B04    loc			       ; loc_52
+020A:0B0E    loc			       ; loc_53
+020A:0B29    loc			       ; loc_54
+020A:0B45    loc			       ; loc_55
+020A:0B4A    loc			       ; loc_56
+020A:0B6C    loc			       ; loc_57
+020A:0B8F    loc			       ; loc_58
+020A:0B9F    loc			       ; loc_59
+020A:0BA9    loc			       ; loc_60
+020A:0BB2    loc			       ; loc_61
+020A:0BC7    loc			       ; loc_ret_62
+020A:0C08    loc			       ; loc_63
+020A:0C2D    loc			       ; loc_64
+020A:0C3D    loc			       ; loc_65
+020A:0C5D    loc			       ; loc_66
+020A:0C7C    loc			       ; loc_67
+020A:0C84    loc			       ; loc_68
+020A:0C8A    loc			       ; loc_69
+020A:0CC7    loc			       ; loc_70
+020A:0CE6    loc			       ; loc_71
+020A:0CE7    loc			       ; loc_ret_72
+020A:0D53    loc			       ; loc_73
+020A:0D67    loc			       ; loc_74
+020A:0D73    loc			       ; loc_75
+020A:0DA4    loc			       ; loc_76
+020A:0DC0    loc			       ; loc_77
+020A:0DD0    loc			       ; loc_78
+020A:0DE5    loc			       ; loc_79
+020A:0E11    loc			       ; loc_80
+020A:0E28    loc			       ; loc_81
+020A:0E30    loc			       ; loc_82
+020A:0E32    loc			       ; loc_83
+020A:0E52    loc			       ; loc_84
+020A:0E76    loc			       ; loc_85
+020A:0E8B    loc			       ; loc_86
+020A:0E9E    loc			       ; loc_87
+020A:0EA8    loc			       ; loc_88
+020A:0EAF    loc			       ; loc_89
+020A:0EF7    loc			       ; loc_90
+020A:0F0C    loc			       ; loc_91
+020A:0F13    loc			       ; loc_92
+020A:0F4D    loc			       ; loc_93
+020A:0F64    loc			       ; loc_94
+020A:0F85    loc			       ; loc_95
+020A:0F9D    loc			       ; loc_96
+020A:0FB9    loc			       ; loc_97
+020A:0FBF    loc			       ; loc_98
+020A:0FDB    loc			       ; loc_99
+020A:0FE1    loc			       ; loc_100
+020A:0FFC    loc			       ; loc_101
+020A:1003    loc			       ; loc_102
+020A:1011    loc			       ; loc_103
+020A:1015    loc			       ; loc_104
+020A:101B    loc			       ; loc_105
+020A:1036    loc			       ; loc_106
+020A:1048    loc			       ; loc_107
+020A:104F    loc			       ; loc_108
+020A:105A    loc			       ; loc_109
+020A:105E    loc			       ; loc_110
+020A:1064    loc			       ; loc_111
+020A:1075    loc			       ; loc_112
+020A:1085    loc			       ; loc_113
+020A:10A6    loc			       ; locloop_114
+020A:10B4    loc			       ; loc_115
+020A:10DE    loc			       ; loc_116
+020A:10EE    loc			       ; loc_117
+020A:10F8    loc			       ; loc_118
+020A:1112    loc			       ; loc_119
+F000:FF53    loc			       ; loc_120
+
+ ÕÕÕÕ Data Items ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+  seg:off    type & options	labels & comments
+  -------    --------------	----------------------------------------------
+020A:0014    dw				       ; data_1
+020A:0016    dd				       ; data_2
+020A:001A    dw, r 2			       ; data_5
+020A:001E    dw, r 2			       ; data_7
+020A:0022    dw, r 2			       ; data_9
+020A:0026    db				       ; data_10
+020A:0027    db				       ; data_11
+020A:0029    db				       ; data_12
+020A:002B    db				       ; data_13
+020A:002C    db				       ; data_14
+020A:002F    dw				       ; data_15
+020A:0031    dw				       ; data_16
+020A:0033    dw				       ; data_17
+020A:0035    dw				       ; data_18
+020A:0037    dw				       ; data_19
+020A:003B    db				       ; data_20
+020A:003C    db				       ; data_21
+020A:003F    db				       ; data_22
+020A:0040    db				       ; data_23
+020A:0041    db				       ; data_24
+020A:0066    dw				       ; data_25
+020A:006C    dw				       ; data_26
+020A:006E    dw				       ; data_27
+020A:0070    dw, r 2			       ; data_28
+020A:0080    dw				       ; data_29
+020A:0082    dw				       ; data_30
+020A:008B    dw				       ; data_31
+020A:0096    db				       ; data_32
+020A:0097    db				       ; data_33
+020A:0100    db				       ; data_34
+020A:014D    dw				       ; data_35
+020A:01C1    dd				       ; data_36
+020A:0263    dw				       ; data_37
+020A:0265    db				       ; data_38
+020A:0314    dw				       ; data_39
+020A:068C    db				       ; data_40
+020A:06EB    dw, r 2			       ; data_41
+020A:06FF    db				       ; data_42
+020A:0802    dw				       ; data_43
+020A:0804    dw				       ; data_44
+020A:08A7    db				       ; data_45
+020A:08A8    db				       ; data_46
+020A:09B8    dw				       ; data_47
+020A:09BC    dw				       ; data_48
+020A:09C0    dw				       ; data_49
+020A:0C1A    dw				       ; data_50
+020A:0C1C    dw				       ; data_51
+020A:0C1E    db				       ; data_52
+020A:1E89    db				       ; data_54
+020A:1E8B    dd				       ; data_55
+020A:2680    dw, r 2			       ; data_56
+020A:2B03    dw				       ; data_57
+020A:93E9    dw, r 2			       ; data_58
+020A:A004    dw				       ; data_59
+020A:A008    dw				       ; data_60
+020A:A03C    db				       ; data_61
+020A:A0FF    db				       ; data_62
+020A:A159    dw				       ; data_63
+020A:A264    db				       ; data_64
+020A:A8E9    dw, r 2			       ; data_65
+020A:C358    dw, r 2			       ; data_66
+020A:E8F9    db				       ; data_67
