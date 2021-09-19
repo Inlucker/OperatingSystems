@@ -1,0 +1,85 @@
+
+                  ฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+                          SOURCER DEFINITION FILE
+                  ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+
+ ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ Section 1: CONTROL INFORMATION   ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+
+Analysis Options = a b c d e f g h i j k l m n o p q r s t u v w x y z
+uP               = 8088
+File format      = lst
+Label type       = Decimal
+Remarks          = All
+Segment display  = Hex
+Target Assembler = NONE
+Code style       = Fragment
+Drive (output)   = Z
+Output filename  = temp2.lst
+Passes           = 2
+Xref             = OFF
+
+
+
+ ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ Section 2: RANGE DEFINITION      ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+
+ ออออ Segments ออออออออออออออออออออออออออ
+
+  begin      end      default	   seg	 seg          seg
+ seg:off     off     ds     es	   type	 size         value
+ -------     ----    ----   ----   ----- -----        -----
+020A:064C    0800    020A   020A   auto	 use16       ; 020A
+
+ ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ Section 3: REFERENCE DEFINITIONS ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+
+ ออออ Subroutines อออออออออออออออออออออออ
+  seg:off    type & options	labels & comments
+  -------    --------------	----------------------------------------------
+020A:072F    sub			       ; sub_1
+020A:07B9    sub			       ; sub_2
+020A:07D9    sub			       ; sub_3
+
+ ออออ Locations อออออออออออออออออออออออออ
+  seg:off    type & options	labels & comments
+  -------    --------------	----------------------------------------------
+020A:064C    loc			       ; loc_1
+020A:067B    loc			       ; loc_2
+020A:0682    loc			       ; loc_3
+020A:0688    loc			       ; loc_4
+020A:068E    loc			       ; loc_5
+020A:0697    loc			       ; loc_6
+020A:06A1    loc			       ; loc_7
+020A:06A7    loc			       ; loc_8
+020A:06AA    loc			       ; loc_9
+020A:06EA    loc			       ; loc_10
+020A:06EC    loc			       ; loc_11
+020A:06FB    loc			       ; loc_12
+020A:070E    loc			       ; loc_13
+020A:0722    loc			       ; loc_14
+020A:0727    loc			       ; loc_15
+020A:0760    loc			       ; loc_16
+020A:077C    loc			       ; loc_17
+020A:078E    loc			       ; loc_18
+020A:07A3    loc			       ; loc_19
+020A:07A5    loc			       ; loc_20
+020A:07D0    loc			       ; loc_21
+020A:07D5    loc			       ; loc_22
+020A:07D8    loc			       ; loc_ret_23
+020A:07F8    loc			       ; loc_24
+020A:07FD    loc			       ; loc_25
+020A:0800    loc			       ; loc_ret_26
+
+ ออออ Data Items ออออออออออออออออออออออออ
+  seg:off    type & options	labels & comments
+  -------    --------------	----------------------------------------------
+020A:003F    db				       ; data_1
+020A:0040    db				       ; data_2
+020A:004A    db				       ; data_3
+020A:0062    db				       ; data_4
+020A:006C    dw				       ; data_5
+020A:006E    dw				       ; data_6
+020A:0070    dw, r 2			       ; data_7
+020A:0084    db				       ; data_8
+020A:0100    db				       ; data_9
+020A:0314    dw				       ; data_10
+020A:06E9    dw, r 2			       ; data_11
+020A:93E9    dw, r 2			       ; data_12
