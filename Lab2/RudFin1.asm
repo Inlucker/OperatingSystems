@@ -21,11 +21,11 @@ gdt_size=$-gdt_null			;(16)Размер GDT
 pdescr	df	0				;(17)Псевдодескриптор для	команды	Igdt
 sym		db	1				;(18)Символ для вывода на	экран
 attr	db	1Eh				;(19)Его атрибут
-msg db 27,'[31;42m Back to real mode ',27,'[0m$' ;(20)
+msg db 27,'[31;42m Back to real mode! ',27,'[0m$' ;(20)
+;Добавил строки для вывода
 msg_real_mode db 'real mode', 13, 10, '$'
 msg_real_back db 'back real mode', 13, 10, '$'
 msg_prot_mode db 'protected mode'
-test_msg db 'test msg'
 data_size=$-gdt_null		;(21)Размер сегмента данных
 data ends					;(22)
 ;Сегмент команд
@@ -63,19 +63,20 @@ main	proc			;(25)
 		mov		dword ptr pdescr+2,EBP;(49)База GDT
 		mov		word ptr pdescr,gdt_size-1;(50)Граница GDT	
 		lgdt	pdescr	;(51)Загрузим регистр GDTR
-		
-	mov ah, 09h
-	mov dx, offset msg_real_mode
-	int 21h
+;Вывод сообщение о том, что мы находимя в реальном режиме
+	;mov ah, 09h
+	;mov dx, offset msg_real_mode
+	;int 21h
 ;Подготовимся к возврату из защищенного режима в реальный
-		;mov		AX,40h		;(52)Настроим ES на область
-		;mov		ES,AX		;(53)данных BIOS
-		;mov		word ptr ES:[67h],offset return;(54)Смещение возврата
-		;mov		ES:[69h],CS ;(55)Сегмент возврата
-		;mov		AL,0Fh		;(56)Выборка байта состояния отключения
-		;out		70h,AL		;(57)Порт КМОП-микросхемы
-		;mov		AL,0Ah		;(58)Установка режима восстановления
-		;out		71h,AL		;(59)в регистре OFh сброса процессора
+;?Не обязательно?
+		mov		AX,40h		;(52)Настроим ES на область
+		mov		ES,AX		;(53)данных BIOS
+		mov		word ptr ES:[67h],offset return;(54)Смещение возврата
+		mov		ES:[69h],CS ;(55)Сегмент возврата
+		mov		AL,0Fh		;(56)Выборка байта состояния отключения
+		out		70h,AL		;(57)Порт КМОП-микросхемы
+		mov		AL,0Ah		;(58)Установка режима восстановления
+		out		71h,AL		;(59)в регистре OFh сброса процессора
 		cli					;(60)Запрет аппаратных прерываний
 ;Переходим в защищенный	режим
 		mov		EAX,CR0		;(61)Получим содержимое регистра CR0
@@ -99,34 +100,44 @@ continue:					;(67)
 		mov		AX,32		;(72)Селектор	сегмента	видеобуфера
 		mov		ES,AX		;(73)Инициализируем ES
 ;Выводим на экран тестовую строку символов
-		;mov		DI,1920		;(74)Начальная позиция на экране
-		;mov		CX,80		;(75)Число выводимых символов
-		;mov 	AX,word ptr sym;(76)Символ+атрибут
-;scrn:	stosw				;(77)Содержимое AX на экран
-		;inc		AL			;(78)Инкремент кода символа
-		;loop 	scrn		;(79)Цикл вывода
-    mov cx, 14
- 	mov si, offset msg_prot_mode
- 	mov di, 700
- 	mov ah, attr
+		mov		DI,1920		;(74)Начальная позиция на экране
+		mov		CX,80		;(75)Число выводимых символов
+		mov 	AX,word ptr sym;(76)Символ+атрибут
+scrn:	stosw				;(77)Содержимое AX на экран
+		inc		AL			;(78)Инкремент кода символа
+		loop 	scrn		;(79)Цикл вывода
 
-screen_prot_mode:
-	lodsb
- 	stosw
-    loop screen_prot_mode
+;Вывод Protected mode по центру сверху
+    ;mov cx, 14
+ 	;mov si, offset msg_prot_mode
+ 	;mov di, 700
+ 	;mov ah, attr
+;screen_prot_mode:
+	;lodsb
+ 	;stosw
+    ;loop screen_prot_mode
 
-	mov ax, 8
-	mov ds, ax
-	mov ax, 24
-	mov ss, ax
-	mov ax, 32
-	mov es, ax
+;Возвращаемся в реальный режим. 
+	;mov gdt_data.lim, 0FFFFh		; Граница сегмента данных.
+    ;mov gdt_code.lim, 0FFFFh		; Граница сегмента команд.
+    ;mov gdt_stack.lim, 0FFFFh	; Граница сегмента стека.
+    ;mov gdt_screen.lim, 0FFFFh	; Граница доп. сегмента (Видеобуфера).
 
-	db 0EAh
-	dw offset go
-	dw 16
+    ;push ds	; Загружаем теневой регистр
+    ;pop  ds	; Сегмента данных. 
+	
+    ;push es	; Загружаем теневой регистр
+    ;pop  es	; Сегмента стека.
 
-go:
+    ;push ss	; Загружаем теневой регистр
+    ;pop  ss	; Дополнительного сегмента данных (видеобуфера).
+
+
+	db 0EAh				; Команда дальнего перехода
+	dw offset go		; Загрузим теневой регистр
+	dw 16				; Сегмента команд.
+
+go: 
 	mov eax, CR0
 	and eax, 0FFFFFFFEh
 	mov CR0, eax
@@ -134,9 +145,11 @@ go:
 	dw offset return
 	dw text
 ;Вернемся в реальный режим
+;Не работает в DOSbox
 		;mov 	AL,0FEh 	;(80)Команда сброса процессора
 		;out 	64h,AL 		;(81)в порт 64h
 		;hlt				;(82)Останов процессора до окончания сброса
+;---------------------------------------------------;
 ; Теперь процессор снова работает в реальном режиме ;
 ;---------------------------------------------------;
 return:						;(83)
@@ -148,13 +161,16 @@ return:						;(83)
 		mov	SP,256			;(88) Настроим SP
 		sti					;(89) Разрешим аппаратные прерывания
 ; Работаем в DOS
+
+;Вывод сообщение о том, что мы вернулись в реальный режим
+	;mov ah, 09h
+	;mov dx, offset msg_real_back
+	;int 21h
+	
 		mov AH,09h			;(90) Проверим выполнение функции DOS
 		mov DX,offset msg;	;(91) После возврата в реальный режим
 		int 21h				;(92)
 		
-	;mov ah, 09h
-	;mov dx, offset msg_real_back
-	;int 21h
 	
 		mov AX,4C00h		;(93) Завершим программу обычным образом
 		int 21h				;(94)
