@@ -67,14 +67,14 @@ main	proc
 	;mov dx, offset msg_real_mode
 	;int 21h
 	
-		mov		AX,40h
-		mov		ES,AX
-		mov		word ptr ES:[67h],offset return
-		mov		ES:[69h],CS
-		mov		AL,0Fh
-		out		70h,AL
-		mov		AL,0Ah
-		out		71h,AL	
+		;mov		AX,40h
+		;mov		ES,AX
+		;mov		word ptr ES:[67h],offset return
+		;mov		ES:[69h],CS
+		;mov		AL,0Fh
+		;out		70h,AL
+		;mov		AL,0Ah
+		;out		71h,AL	
 		
 		cli
 		
@@ -107,15 +107,12 @@ scrn:	stosw
     ;mov gdt_stack.lim, 0FFFFh
     ;mov gdt_screen.lim, 0FFFFh
 
-    ;push ds
-    ;pop  ds 
-	
-    ;push es
-    ;pop  es
-
-    ;push ss
-    ;pop  ss
-
+    push ds
+    pop  ds 
+    push es
+    pop  es
+    push ss
+    pop  ss
 
 	db 0EAh
 	dw offset go
@@ -145,7 +142,6 @@ return:
 		mov DX,offset msg
 		int 21h
 		
-	
 		mov AX,4C00h
 		int 21h	
 main	endp
