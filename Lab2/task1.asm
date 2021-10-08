@@ -15,15 +15,15 @@ stack32 segment  para stack 'STACK'
     stack_size = $-stack_start
 stack32 ends
 
-data32 segment para 'data'
+data16 segment para 'data' use16
     gdt_null  descr <>
 	; дескриптор, описывающий сегмент для реального режима (там типа все в большинстве своем 16 битное, поэтому лучше и описать сегмент как 16 битный)
 	gdt_code16 descr <code16_size-1,0,0,98h,0,0>
-    ; дескриптор для измерения памяти (описывает сегмент размера 4гб и начало которого на 0 байте)
-	gdt_data4gb descr <0FFFFh,0,0,92h,0CFh,0> ; fffff = 2^20 и по страницам, т.е. (G - бит гранулярности) т.е. по 4Кл = 4*2^10 ==> 2^20 * 4 * 2^10 = 4*2^30
-    ; дескриптор сегмента кода с 32 битными операциями (там описаны обработчики прерываний в защищенном режиме, код защищенного режима и тп (потому что они используют преимущественно 32 битные операнды))
+    gdt_data16 descr <data16_size-1,0,0,92h,0,0>
+	; дескриптор сегмента кода с 32 битными операциями (там описаны обработчики прерываний в защищенном режиме, код защищенного режима и тп (потому что они используют преимущественно 32 битные операнды))
     gdt_code32 descr <code32_size-1,0,0,98h,40h,0>
-    gdt_data32 descr <data_size-1,0,0,92h,40h,0>
+    ; дескриптор для измерения памяти (описывает сегмент размера 4гб и начало которого на 0 байте)
+	gdt_data32 descr <0FFFFh,0,0,92h,0CFh,0> ; fffff = 2^20 и по страницам, т.е. (G - бит гранулярности) т.е. по 4Кл = 4*2^10 ==> 2^20 * 4 * 2^10 = 4*2^30
     gdt_stack32 descr <stack_size-1,0,0,92h,40h,0>
 	; Размер видеостраницы составляет 4000 байт - поэтому граница 3999.
     ; B8000h - базовый физический адрес страницы (8000h и 0Bh). 
@@ -38,7 +38,7 @@ data32 segment para 'data'
 	
 	; Селекторы - номер (индекс начала) дескриптора в GDT.
     code16s=8
-    data4gbs=16
+    data16s=16
     code32s=24
     data32s=32
     stack32s=40
@@ -57,15 +57,15 @@ data32 segment para 'data'
     pm_msg_out  db 27, '[30;42mNow in Real Mode again! ', 27, '[0m$'
     pm_mem_count db 'Memory: '
 	
-	data_size=$-gdt_null
-data32 ends
+	data16_size=$-gdt_null
+data16 ends
 
 
 code32 segment para public 'code' use32
-    assume cs:code32, ds:data32, ss:stack32
+    assume cs:code32, ds:data16, ss:stack32
 	
 pm_start:
-    mov ax, data32s
+    mov ax, data16s
     mov ds, ax
     mov ax, video16s
     mov es, ax
@@ -97,11 +97,11 @@ pm_start:
 	; USES - список регистров, значения которых изменяет процедура. Ассемблер по-
     ; мещает в начало процедуры набор команд PUSH, а перед командой RET - набор
     ; команд POP, так что значения перечисленных регистров будут восстановлены
-    ; Если ds не сохранить, то вернувшись обратно ds будет содержать селектор data4gbs.
+    ; Если ds не сохранить, то вернувшись обратно ds будет содержать селектор data32s.
     count_memory_proc proc uses ds eax ebx
-        mov ax, data4gbs ; Селектор, который указывает на дескриптор, описывающий сегмент 4 Гб.
-        mov ds, ax ; На данном этапе в сегментный регистр помещается селектор data4gbs
-        ;  И в этот же момент в теневой регистр помещается дескриптор gdt_data4gb
+        mov ax, data32s ; Селектор, который указывает на дескриптор, описывающий сегмент 4 Гб.
+        mov ds, ax ; На данном этапе в сегментный регистр помещается селектор data32s
+        ;  И в этот же момент в теневой регистр помещается дескриптор gdt_data32
 
         ; Перепрыгиваем первый мегабайт 2^20.
         ; Т.к в первом мегобайте располагается наша программа
@@ -209,7 +209,7 @@ code32 ends
 
 
 code16 	segment para public 'CODE' use16
-		assume cs:code16, ds:data32, ss: stack32
+		assume cs:code16, ds:data16, ss: stack32
 		
 NewLine: 
     ; Перенес на новую строку.
@@ -230,7 +230,7 @@ ClearScreen:
 ; Начало программы.
 main:
     ; Инициализируем DS сегментом данных.
-	mov	AX,data32
+	mov	AX,data16
 	mov	DS,AX
 	
 	; Вывдим сообщение, о том, что мы в реальном режиме.
@@ -273,12 +273,12 @@ main:
     mov byte ptr gdt_code32.base_h, ah  
 
     ; просто записываем линейные адреса в дескрипторы сегментов
-    mov ax, data32
+    mov ax, data16
     shl eax, 4                        
-    mov word ptr gdt_data32.base_l, ax  
+    mov word ptr gdt_data16.base_l, ax  
     shr eax, 16                       
-    mov byte ptr gdt_data32.base_m, al  
-    mov byte ptr gdt_data32.base_h, ah  
+    mov byte ptr gdt_data16.base_m, al  
+    mov byte ptr gdt_data16.base_h, ah  
 
     ; просто записываем линейные адреса в дескрипторы сегментов
     mov ax, stack32
@@ -289,7 +289,7 @@ main:
     mov byte ptr gdt_stack32.base_h, ah
 	
 	; получаем адрес сегмента, где лежит глобальная таблица дескрипторов
-    mov ax, data32
+    mov ax, data16
     shl eax, 4
     ; Прибавляем смещение этой таблицы в этом сегменте к начальному адресу сегменту 
     ; И получаем ----> Линейный адрес таблицы GDT.
@@ -347,7 +347,7 @@ return_rm:
 
 go:
     ; обновляем все сегментные регистры
-    mov ax, data32   
+    mov ax, data16   
     mov ds, ax
     mov ax, code32
     mov es, ax
