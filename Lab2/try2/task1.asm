@@ -50,8 +50,6 @@ data32 segment para 'data'
     ; 16: FFFF FFFF - max возможное значение, кот-ое мы можем вывести, 
     ; Длина = 8, умножаем на 2, т.к. там еще атрибут учитывается.
     mb_pos=30 + 2
-    cursor_pos=80 ; 80 * 2 - длина строки. (расширение 80x25 (возможно))
-    ; cursor_pos=80*2*2+38*2
     param=1Eh
 
 	rm_msg      db 27, '[30;42mNow in Real Mode. ', 27, '[0m$', '$'
@@ -76,8 +74,6 @@ pm_start:
     mov eax, stack_size
     mov esp, eax
 	
-	;sti ; Резрешаем (аппаратные) прерывания
-	
 	; Вывод сообщения "Memory"
     mov di, mem_pos
     mov ah, param
@@ -91,18 +87,9 @@ pm_start:
     loop print_memory_msg
 
     ; Считаем и выводим кол-во физической памяти, выделенной dosbox'у.
-    ;call count_memory_proc
+    call count_memory_proc
 	
-	; Цикл, пока не будет введен Enter
-    ; (Флаг flag_enter_pr выставляется в функции-обработчике нажатия с клавиатуры при нажатии Enter'a)
-    ;proccess:
-    ;    test flag_enter_pr, 1 ; если flag = 1, то выход
-    ;jz  proccess
-	
-	; Маскируемые прерывания - которые можно запретить маской. 
     ; Выход из защищенного режима
-    ;cli ; Запрет аппаратных маскируемые прерывания прерываний.
-
     db  0EAh ; jmp
     dd  offset return_rm ; offset
     dw  code16s ; selector
@@ -134,22 +121,20 @@ pm_start:
         ; сравнить с сигнатурой в программе, если сигнатуры совпали, то это – память.
         ; Вывести на экран полученной количество байтов доступной памяти.
 
-
         count_memory:
             ; Сохраняем байт в dh.
             mov dh, ds:[ebx] ; ds:[ebx] - линейный адрес вида: 0 + ebx (ebx пробегает)
-            ; Записываем по этому адресу сигнатуру.
-            mov ds:[ebx], dl        
+			; Записываем по этому адресу сигнатуру.
+            mov ds:[ebx], dl   
             ; Сравниваем записанную сигнатуру с сигнатурой в программе.
-            cmp ds:[ebx], dl        
+            cmp ds:[ebx], dl    
         
             ; Если не равны, то это уже не наша память. Выводим посчитанное кол-во.
-            jne print_memory_counter        
+            jne print_memory_counter
         
             mov ds:[ebx], dh    ; Обратно запиываем считанное значени.
             inc ebx             ; Увеличиваем счетчик.
         loop count_memory
-
     print_memory_counter:
         mov eax, ebx 
         xor edx, edx
@@ -162,7 +147,6 @@ pm_start:
         mov ebx, mem_value_pos
         ; функция, которая печатает eax (в котором лежит найденное кол-во мегабайт)
         call print_count_memory
-
         ; Печать надписи Mb (мегабайты)
         mov ah, param
         mov ebx, mb_pos
@@ -243,7 +227,9 @@ ClearScreen:
     int 10h
     ret
 		
+; Начало программы.
 main:
+    ; Инициализируем DS сегментом данных.
 	mov	AX,data32
 	mov	DS,AX
 	
@@ -309,7 +295,7 @@ main:
     ; И получаем ----> Линейный адрес таблицы GDT.
     add eax, offset gdt_null
 	
-	 ; Коварный вопрос: размер GDTR? - 32 бита (4 байта)
+	; Коварный вопрос: размер GDTR? - 32 бита (4 байта)
     ; В Зубкове на стр 477 написано, что он 48 битный (6 байт)
     ; LGDT (Load GDT) - загружает в регистр процессора GDTR (GDT Register)  (лежит лин. адр этой табл и размер)
     ; (LGDT относится к типу привилегированных команд.)
@@ -320,14 +306,20 @@ main:
     ; fword - получается, что это 6 байт
     ;lgdt fword ptr pdescr
 	
-	mov		dword ptr pdescr+2,eax;
-	mov		word ptr pdescr,gdt_size-1	
-	lgdt	pdescr
+	mov	dword ptr pdescr+2,eax;
+	mov	word ptr pdescr,gdt_size-1	
+	lgdt pdescr
+	;lgdt fword ptr pdescr
 	
 	mov ax, code32
     mov es, ax
 		
 	;Добавить IDTR
+	
+	; открытие линии A20 (если не откроем, то будут битые адреса, будет пропадать 20ый бит)
+    in  al, 92h
+    or  al, 2
+    out 92h, al
 		
 	cli
 	
@@ -342,11 +334,6 @@ main:
     db  0EAh ; Код команды far jmp.
     dd  offset pm_start ; Смещение
     dw  code32s         ; Сегмент
-	
-	;db  66h
-	;db 0EAh				
-	;dw offset continue	
-	;dw code32s	
 	
 return_rm:
     ; возвращаем флаг pe
@@ -369,8 +356,16 @@ go:
     mov ax, stack_size
     mov sp, ax
 	
-	call ClearScreen
+	; закрытие линии A20 (если не закроем, то сможем адресовать еще 64кб памяти (HMA, см. сем))
+    in  al, 70h 
+    and al, 7Fh
+    out 70h, al
+
+    sti ; Резрешаем (аппаратные) прерывания     
 	
+	;call ClearScreen
+	
+    call NewLine
 	mov ah, 09h
     lea dx, pm_msg_out
     int 21h
