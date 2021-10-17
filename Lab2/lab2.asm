@@ -63,11 +63,40 @@ data16 segment para 'data' use16
 
     mask_master db 0        
     mask_slave  db 0        
-    
-    asciimap   db 0, 0, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 45, 61, 0, 0
-    db 81, 87, 69, 82, 84, 89, 85, 73, 79, 80, 91, 93, 0, 0, 65, 83
-    db 68, 70, 71, 72, 74, 75, 76, 59, 39, 96, 0, 92, 90, 88, 67
-    db 86, 66, 78, 77, 44, 46, 47
+	
+	asciimap_high db 0
+	db 0 ;1 - Esc
+	db '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='
+	db 219 ;14 - BackSpace
+	db 0 ;15 - TAB
+    db 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}'
+	db 3 ;28 - Enter
+	db 0 ;29 - LeftCtrl
+    db 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~'
+	db 0 ;42 - LeftShift
+	db 92 ;43 - '/'
+	db 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?' ;53 символа
+	
+	shift_reg_flag db 0
+	caps_lock_flag db 0
+	
+	asciimap_low db 0
+	db 0 ;1 - Esc
+	db '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='
+	db 219 ;14 - BackSpace
+	db 0 ;15 - TAB
+    db 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']'
+	db 3 ;28 - Enter
+	db 0 ;29 - LeftCtrl
+    db 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', 39, '`'
+	db 0 ;42 - LeftShift
+	db 92 ;43 - '/'
+	db 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/' ;53 символа
+	;db 0 ;54 - RightShift
+	;db 14 ;55 - PrintScreen
+	;db 1 ;56 - Alt*
+	;db ' ' ;57 - Пробел
+	;db 0 ;58 - CapsLock
 
     flag_enter_pr db 0
     cnt_time      db 0            
@@ -179,37 +208,115 @@ pm_start:
     new_int09 proc uses eax ebx edx
         ;Порт 60h при чтении содержит скан-код последней нажатой клавиши.
         in  al, 60h ; считываем порт клавы
-        cmp al, 1Ch ; сравниваем с Enter'ом
-
-        jne print_value         
-        or flag_enter_pr, 1 ; если Enter, устанавливаем флаг
-        jmp exit
-
-    print_value:
-        ; это условие проверяет, отпущена ли была клавиша (то есть если в al лежит 80h, то клавиша была отпущена)
-        cmp al, 80h
-        ja exit
-
-        xor ah, ah   
-
-        xor ebx, ebx
-        mov bx, ax
-
-        mov dh, param
-        mov dl, asciimap[ebx]   
-        mov ebx, syml_pos   
 		
 		;Пока считаем память - печатать нельзя
+		mov ebx, syml_pos 		
 		cmp ebx,0
 		je exit
 		
-        mov es:[ebx], dx
+		; игнорим Ctrl
+		cmp al, 29
+		je exit
+		
+		;Debug output
+		;MOV DL,AL
+		;MOV DH,param
+		;MOV ES:[80],DX		
+		
+	; Проверяем Enter
+        cmp al, 28
+        jne check_caps_on         
+        or flag_enter_pr, 1
+        jmp exit
+	
+	; проверяем CapsLock вкл
+	check_caps_on:
+		cmp al,58
+		jne check_caps_off
+		or caps_lock_flag,1
+		jmp exit
+	
+	; проверяем CapsLock Выкл
+	check_caps_off:
+		cmp al,186
+		jne check_shift_pressed
+		and caps_lock_flag,0
+		jmp exit
+		
+	; проверяем LeftShift pressed
+	check_shift_pressed:
+		cmp al,42
+		jne check_shift_unpressed
+		or shift_reg_flag,1
+		jmp exit
 
-        add ebx, 2          
+	; проверяем LeftShift unpressed
+	check_shift_unpressed:
+		cmp al,170
+		jne check_BackSpace
+		and shift_reg_flag,0
+		jmp exit
+		
+	; проверяем BackSpace
+	check_BackSpace:
+		cmp al, 0Eh
+        jne check_probel
+        mov ebx, syml_pos
+		mov es:[ebx], ' '
+		sub ebx, 2
+        mov syml_pos, ebx
+		jmp exit
+	
+	; проверяем пробел
+	check_probel:
+		cmp al,57
+		jne check_tab
+		mov dl, ' '
+		jmp print_dx
+		
+	; проверяем Tab
+	check_tab:
+		cmp al,15
+		jne set_value
+        mov ebx, syml_pos
+		mov dword ptr es:[ebx], 1E201E20h
+		mov dword ptr es:[ebx+4], 1E201E20h
+		add ebx, 8
+        mov syml_pos, ebx		
+		jmp exit
+	
+    set_value:
+        ; это условие проверяет, отпущена ли была клавиша (то есть если al > 80h, то клавиша была отпущена)
+        cmp al, 80h
+        ja exit
+
+        xor ah, ah
+		
+		cmp ax,2
+		jb exit
+		cmp ax,53
+		ja exit
+
+        xor ebx, ebx
+        mov bx, ax
+		
+        mov dl, asciimap_low[ebx]
+		
+		mov dh, caps_lock_flag
+		xor dh, shift_reg_flag
+		cmp dh, 0
+		je print_dx
+		
+		mov dl, asciimap_high[ebx] 	
+	print_dx:
+        mov dh, param	
+        mov ebx, syml_pos 		
+		
+        mov es:[ebx], dx
+        add ebx, 2   
         mov syml_pos, ebx
 
     exit: 
-
         ; используется только в аппаратных прерываниях для корректного завершения (разрешаем обработку прерываний с меньшим приоритетом)!!
         mov al, 20h 
         out 20h, al
