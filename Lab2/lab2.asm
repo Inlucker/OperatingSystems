@@ -109,10 +109,9 @@ data16 segment para 'data' use16
 	
 	mem_pos=0
     ; позиция на экране значения кол-ва доступной памяти
-    mem_value_pos=14 + 16 ; 14: пропускаем нашу строку (это ее длина), 
-    ; 16: FFFF FFFF - max возможное значение, кот-ое мы можем вывести, 
-    ; Длина = 8, умножаем на 2, т.к. там еще атрибут учитывается.
-    mb_pos=30 + 2
+    mem_value_pos= 14 + 10 ; 10: пропускаем нашу строку (это ее длина),
+    ; Длина = 5, умножаем на 2, т.к. там еще атрибут учитывается.
+    mb_pos=14+10+2
     param=1Eh
 
 	rm_msg      db 27, '[30;42mNow in Real Mode. ', 27, '[0m$', '$'
@@ -370,67 +369,47 @@ pm_start:
         mov ebx, mem_value_pos
         ; функция, которая печатает eax (в котором лежит найденное кол-во мегабайт)
         call print_count_memory
-		; Печать символа h
-        mov ah, param
-        mov ebx, mb_pos
-        mov al, 'h'
-        mov es:[ebx], ax
 		; Печать пробела
         mov ah, param
-        mov ebx, mb_pos + 2
+        mov ebx, mb_pos
         mov al, ' '
         mov es:[ebx], ax
         ; Печать надписи Mb (мегабайты)
         mov ah, param
-        mov ebx, mb_pos + 4
+        mov ebx, mb_pos + 2
         mov al, 'M'
         mov es:[ebx], ax
 
-        mov ebx, mb_pos + 6
+        mov ebx, mb_pos + 4
         mov al, 'b'
         mov es:[ebx], ax
         ret
 
     count_memory_proc endp
 
-    print_count_memory proc uses ecx ebx edx
+    print_count_memory proc uses ecx edx
         ; В eax лежит кол-во мегабайт.
         ; В ebx лежит mem_value_pos.
-        mov ecx, 8
+		
+		mov eax, 20h
+		
+        mov ecx, 5
         mov dh, param
-
-        print_symbol:
-            mov dl, al
-            ; Получаем "младшую часть dl"
-            and dl, 0Fh ; AND с 0000 1111 --> остаются последние 4 бита, то есть 16ричная цифра
-
-            ; Сравниваем с 10
-            cmp dl, 10
-            ; Если dl меньше 10, то выводим просто эту цифру.
-            jl to_ten ; До десяти.
-            ; Если больше 10, то вычитаем из dl 10
-            ; Тем самым получая все, что больше 10
-            ; Т.е. 0 или 1 или ... или 5
-            sub dl, 10
-            ; Добавляем к dl 'A', то есть то, что больше 10
-            ; И получаем  собственно нужную нам букву.
-            add dl, 'A'
-            jmp after_ten
-
-        
-        to_ten:
-            add dl, '0'  ; Превращаем в строковое представление число.
-        after_ten:
-            ; Помещаем в видеобуфер dx 
-            mov es:[ebx], dx 
-            ; Циклически сдвигаем вправо число на 4, 
-            ; Тем самым на след. операции будем работать со след. цифрой.
-            ror eax, 4 ; убираем последнюю 16ричную цифру eax
-            ; 2 - т.к. байт атрибутов и байт самого символа.
-            sub ebx, 2 ; переходим к левой ячейки видеопамяти       
-        loop print_symbol
-
-        ret
+		
+		print_digit:
+			mov dl, 10
+			div dl
+			mov dl, ah
+			xor ah, ah
+			add dl, '0'
+			
+			mov es:[ebx], dx
+			sub ebx, 2
+			dec ecx
+			cmp ecx, 0
+			jne print_digit
+			
+			ret
     print_count_memory endp
 
     code32_size = $-pm_start
