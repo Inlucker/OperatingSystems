@@ -15,8 +15,6 @@ int main()
 {
 	int childpid_1, childpid_2;
 	int fd[2];
-	// 0 - выход для чтения.
-	// 1 - выход для записи.
 
 	if (pipe(fd) == -1)
 	{

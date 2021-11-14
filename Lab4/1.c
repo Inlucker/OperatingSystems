@@ -13,8 +13,8 @@ int main()
 	}
 	else if (childpid_1 == 0)
 	{
-		sleep(1); // закончится раньше предка
-		printf("First child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
+		sleep(2);
+		printf("\nFirst child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
 		exit(EXIT_SUCCESS);
 	}
 
@@ -25,15 +25,13 @@ int main()
 	}
 	else if (childpid_2 == 0)
 	{
-		sleep(3); // закончится позже предка
-		printf("\nSecond child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
+		sleep(3);
+		printf("Second child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
 		exit(EXIT_SUCCESS);
 	}
 
 	printf("Parent: pid = %d; pgrp = %d; child1 = %d; child2 = %d\n", getpid(), getpgrp(), childpid_1, childpid_2);
-
-	sleep(2);
-
+	
 	printf("Parent will die now.\n");
 	return EXIT_SUCCESS;
 }

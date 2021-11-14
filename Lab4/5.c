@@ -56,7 +56,6 @@ int main()
 	printf("Press \"CTRL+C\", to see message from second child.\n");
 	printf("In other case you will see message from first child.\n\n");
 	
-	
 	char text1[LEN], text2[LEN];
 
 	close(fd[1]);
@@ -91,6 +90,7 @@ void checkStatus(int child_pid, int status)
 		printf("Child with pid = %d has terminated normally.\n\n", child_pid);
 	else if (WEXITSTATUS(status))
 		printf("Child with pid = %d has terminated with code %d.\n", child_pid, WIFEXITED(status));
+	
 	else if (WIFSIGNALED(status))
 	{
 		printf("Child with pid = %d has terminated with an un-intercepted signal.\n", child_pid);

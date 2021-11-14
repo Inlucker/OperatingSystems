@@ -38,6 +38,13 @@ void swap(int *el1, int *el2)
     *el2 = temp;
 }
 
+
+
+
+
+
+
+
 void selectionSort(int *l, int *r)
 {
     for (int *i = l; i <= r; i++)
