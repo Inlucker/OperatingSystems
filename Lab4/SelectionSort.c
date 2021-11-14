@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 void printMas(const int *mas, int size);
 void selectionSort(int *l, int *r);
 
