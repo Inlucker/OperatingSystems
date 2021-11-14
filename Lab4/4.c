@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -30,7 +29,7 @@ int main()
 		perror("Can\'t fork.\n");
 		return EXIT_FAILURE;
 	}
-	else if (!childpid_1) // Это процесс потомок.
+	else if (childpid_1 == 0)
 	{
 		close(fd[0]);
 		write(fd[1], TEXT1, strlen(TEXT1) + 1);
@@ -42,7 +41,7 @@ int main()
 		perror("Can\'t fork.\n");
 		return EXIT_FAILURE;
 	}
-	else if (!childpid_2)
+	else if (childpid_2 == 0)
 	{
 		close(fd[0]);
 		write(fd[1], TEXT2, strlen(TEXT2) + 1);

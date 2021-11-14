@@ -1,14 +1,32 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#define LEN 50
+#define TEXT1 "My name is Proffesional\n"
+#define TEXT2 "There is no meaning in this words\n"
+
 void checkStatus(int child_pid, int status);
+void catch_sig(int sig_numb);
+
+int flag = 0;
 
 int main()
 {
+    signal(SIGINT, catch_sig);
+	
 	int childpid_1, childpid_2;
+	int fd[2];
+
+	if (pipe(fd) == -1)
+	{
+		perror("Can\'t pipe.\n");
+		return EXIT_FAILURE;
+	}
 
 	if ((childpid_1 = fork()) == -1)
 	{
@@ -17,12 +35,8 @@ int main()
 	}
 	else if (childpid_1 == 0)
 	{
-		printf("First child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
-		if (execlp("ls", "ls", NULL) == -1)
-		{
-			perror("First child can\'t exec");
-			exit(EXIT_FAILURE);
-		}
+		close(fd[0]);
+		write(fd[1], TEXT1, strlen(TEXT1) + 1);
 		exit(EXIT_SUCCESS);
 	}
 
@@ -33,16 +47,28 @@ int main()
 	}
 	else if (childpid_2 == 0)
 	{
-		printf("Second child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
-		if (execl("sort", "sort", "999", "111", "9", "1", "11", "99", "55", "555", "5", NULL) == -1)
-		{
-			perror("Second child can\'t exec");
-			exit(EXIT_FAILURE);
-		}
+		close(fd[0]);
+		write(fd[1], TEXT2, strlen(TEXT2) + 1);
 		exit(EXIT_SUCCESS);
 	}
 
 	printf("Parent: pid = %d; pgrp = %d; child1 = %d; child2 = %d\n", getpid(), getpgrp(), childpid_1, childpid_2);
+	printf("Press \"CTRL+C\", to see message from second child.\n");
+	printf("In other case you will see message from first child.\n\n");
+	
+	
+	char text1[LEN], text2[LEN];
+
+	close(fd[1]);
+	read(fd[0], text1, LEN);
+	read(fd[0], text2, LEN);
+	
+	sleep(2);
+	
+	if (flag)
+		printf("Message: %s", text2);
+	else
+		printf("Message: %s", text1);
 
 	int status;
 	pid_t child_pid;
@@ -75,4 +101,10 @@ void checkStatus(int child_pid, int status)
 		printf("Child with pid = %d has stopped.\n", child_pid);
 		printf("Signal number = %d.", WSTOPSIG(status));
 	}
+}
+
+void catch_sig(int sig_numb)
+{
+	flag = 1;
+	printf("\ncatch_sig: %d\n", sig_numb);
 }
