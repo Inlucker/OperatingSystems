@@ -16,8 +16,12 @@ int main()
 	}
 	else if (childpid_1 == 0)
 	{
-		//sleep(1);
 		printf("First child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
+		if (execlp("ls", "ls", NULL) == -1)
+		{
+			perror("First child can\'t exec");
+			exit(EXIT_FAILURE);
+		}
 		exit(EXIT_SUCCESS);
 	}
 
@@ -28,8 +32,12 @@ int main()
 	}
 	else if (childpid_2 == 0)
 	{
-		//sleep(2);
 		printf("Second child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
+		if (execl("sort", "sort", "999", "111", "9", "1", "11", "99", "55", "555", "5", NULL) == -1)
+		{
+			perror("Second child can\'t exec");
+			exit(EXIT_FAILURE);
+		}
 		exit(EXIT_SUCCESS);
 	}
 
@@ -37,7 +45,7 @@ int main()
 
 	int status;
 	pid_t child_pid;
-
+	
 	printf("Waiting...\n");
 	child_pid = wait(&status);
 	printf("Child with pid = %d has ended with status = %d\n\n", child_pid, status);
@@ -45,7 +53,7 @@ int main()
 	printf("Waiting...\n");
 	child_pid = wait(&status);
 	printf("Child with pid = %d has ended with status = %d\n\n", child_pid, status);
-
+	
 	printf("Parent will die now.\n");
 	return EXIT_SUCCESS;
 }
