@@ -18,7 +18,7 @@ int main()
 	else if (childpid_1 == 0)
 	{
 		printf("First child: pid = %d; ppid = %d;  pgrp = %d\n", getpid(), getppid(), getpgrp());
-		if (execlp("ls", "ls", NULL) == -1)
+		if (execl("print", "print","My message", "to print", NULL) == -1)
 		{
 			perror("First child can\'t exec");
 			exit(EXIT_FAILURE);
