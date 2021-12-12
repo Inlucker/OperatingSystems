@@ -16,6 +16,8 @@
 
 #define BUFFER_SIZE 10
 
+#define ITERATIONS 3
+
 int semid;
 char *buffer;
 
@@ -42,7 +44,6 @@ int printBuf()
 		for (int i = 0; i < BUFFER_SIZE; i++)
 			printf("%c", buffer[i]);
 		//printf("_%c", buffer[BUFFER_SIZE]);
-		//printf("_%d", buffer[BUFFER_SIZE+1]);
 		printf("\n");
 		return 1;
 	}
@@ -66,66 +67,61 @@ struct sembuf ProducerV[2] =
 
 void producer(int prod_id, int delay)
 {
-	//srand(prod_id + time(NULL));
-	//delay = rand()%5000000;
 	//printf("Производитель %d delay = %d\n", prod_id, delay);
-	usleep(delay); //change
-	
-	if (semop(semid, ProducerP, 2) == -1)
+	for (int j = 0; j < ITERATIONS; j++)
 	{
-		perror("ProducerP semop error\n");
-		exit(1);
-	}
-	
-	/*printf("Sems after ProducerP %d: ", prod_id);
-	if (printGetAll(semid) == -1)
-	{
-		perror("semctl GETALL error\n");
-		exit(1);
-	}*/
-	
-	printf("Производитель %d в критической секции\n", prod_id);
-	
-	int full = getVal(BUFFER_FULL);
-	if (full != -1)
-	{
-		buffer[full] = buffer[BUFFER_SIZE];
-		printf("Производитель %d записал '%c'\n", prod_id, buffer[BUFFER_SIZE]++);
-		for (int i = full; i > 0; i--)
+		usleep(delay);
+		
+		if (semop(semid, ProducerP, 2) == -1)
 		{
-			buffer[i] = buffer[i-1];
+			perror("ProducerP semop error\n");
+			exit(1);
 		}
-		buffer[0] =  buffer[BUFFER_SIZE];
+		
+		/*printf("Sems after ProducerP %d: ", prod_id);
+		if (printGetAll(semid) == -1)
+		{
+			perror("semctl GETALL error\n");
+			exit(1);
+		}*/
+		
+		printf("Производитель %d в критической секции\n", prod_id);
+		
+		int full = getVal(BUFFER_FULL);
+		//printf("BUFFER_FULL = %d\n", full);
+		if (full != -1)
+		{
+			buffer[full] = buffer[BUFFER_SIZE];
+			printf("Производитель %d записал '%c'\n", prod_id, buffer[BUFFER_SIZE]);
+			for (int i = full; i > 0; i--)
+			{
+				buffer[i] = buffer[i-1];
+			}
+			buffer[0] =  buffer[BUFFER_SIZE]++;
+		}
+		else
+			printf("Производитель %d не смог записать\n", prod_id);	
+		
+		/*if (!printBuf())
+		{
+			perror("buffer == NULL");
+			exit(1);
+		}*/
+		
+		if (semop(semid, ProducerV, 2) == -1)
+		{
+			perror("ProducerV semop error\n");
+			exit(1);
+		}	
+		printf("Производитель %d вышел из критической секции\n", prod_id);
+		
+		/*printf("Sems after ProducerV %d: ", prod_id);
+		if (printGetAll(semid) == -1)
+		{
+			perror("semctl GETALL error\n");
+			exit(1);
+		}*/
 	}
-	else
-		printf("Производитель %d не смог записать\n", prod_id);
-	
-	//Неправильно
-	/*if (full != -1)
-	{
-		buffer[full] = buffer[BUFFER_SIZE];
-		printf("Производитель %d записал '%c'\n", prod_id, buffer[BUFFER_SIZE]++);
-	}
-	else
-		printf("Производитель %d не смог записать\n", prod_id);*/
-	
-	
-	//printf("BUFFER_FULL = %d\n", full);
-	
-	
-	if (semop(semid, ProducerV, 2) == -1)
-	{
-		perror("ProducerV semop error\n");
-		exit(1);
-	}	
-	printf("Производитель %d вышел из критической секции\n", prod_id);
-	
-	/*printf("Sems after ProducerV %d: ", prod_id);
-	if (printGetAll(semid) == -1)
-	{
-		perror("semctl GETALL error\n");
-		exit(1);
-	}*/
 }
 
 //P (proberen – проверять)
@@ -144,58 +140,60 @@ struct sembuf ConsumerV[2] =
 
 void consumer(int cons_id, int delay)
 {
-	//srand(cons_id + time(NULL));
-	//int delay = rand()%5000000;
 	//printf("Потребитель %d delay = %d\n", cons_id, delay+500000);
-	usleep(delay+500000); //change
-	
-	if (semop(semid, ConsumerP, 2) == -1)
+	for (int j = 0; j < ITERATIONS; j++)
 	{
-		perror("ConsumerP semop error\n");
-		exit(1);
+		usleep(delay+900000);
+		
+		if (semop(semid, ConsumerP, 2) == -1)
+		{
+			perror("ConsumerP semop error\n");
+			exit(1);
+		}
+		
+		/*printf("Sems after ConsumerP %d: ", cons_id);
+		if (printGetAll(semid) == -1)
+		{
+			perror("semctl GETALL error\n");
+			exit(1);
+		}*/
+		
+		printf("Потребитель %d в критической секции\n", cons_id);
+		
+		int full = getVal(BUFFER_FULL);
+		if (full != -1)
+		{
+			printf("Потребитель %d считал '%c'\n", cons_id, buffer[full]);
+			buffer[full] = '0';
+		}
+		else
+			printf("Потребитель %d не смог считать\n", cons_id);
+		
+		/*if (!printBuf())
+		{
+			perror("buffer == NULL");
+			exit(1);
+		}*/
+		
+		if (semop(semid, ConsumerV, 2) == -1)
+		{
+			perror("ConsumerC semop error\n");
+			exit(1);
+		}	
+		printf("Потребитель %d вышел из критической секции\n", cons_id);
+		
+		/*printf("Sems after ConsumerC %d: ", cons_id);
+		if (printGetAll(semid) == -1)
+		{
+			perror("semctl GETALL error\n");
+			exit(1);
+		}*/
 	}
-	
-	/*printf("Sems after ConsumerP %d: ", cons_id);
-	if (printGetAll(semid) == -1)
-	{
-		perror("semctl GETALL error\n");
-		exit(1);
-	}*/
-	
-	printf("Потребитель %d в критической секции\n", cons_id);
-	
-	int full = getVal(BUFFER_FULL);
-	if (full != -1)
-	{
-		printf("Потребитель %d считал '%c'\n", cons_id, buffer[full]);
-		buffer[full] = '0';
-	}
-	else
-		printf("Потребитель %d не смог считать\n", cons_id);
-	
-	//Неправильно
-	/*printf("Потребитель %d считал '%c'\n", cons_id, buffer[buffer[BUFFER_SIZE+1]]);
-	buffer[buffer[BUFFER_SIZE+1]] = '0';
-	buffer[BUFFER_SIZE+1]++;*/
-	
-	if (semop(semid, ConsumerV, 2) == -1)
-	{
-		perror("ConsumerC semop error\n");
-		exit(1);
-	}	
-	printf("Потребитель %d вышел из критической секции\n", cons_id);
-	
-	/*printf("Sems after ConsumerC %d: ", cons_id);
-	if (printGetAll(semid) == -1)
-	{
-		perror("semctl GETALL error\n");
-		exit(1);
-	}*/
 }
 
 int createChild(int cid, void (*fptr)(int, int))
 {
-	int delay = rand()%(5000000) + 1000000;
+	int delay = rand()%(4000000) + 1000000;
 	int childpid;
 	if ((childpid = fork()) == -1)
 	{
@@ -212,7 +210,6 @@ int createChild(int cid, void (*fptr)(int, int))
 int main()
 {	
 	srand(time(NULL));
-	//printf("%d %d %d \n", rand(), rand(), rand());
 
 	int perms = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 	//Создаем набор из 3 семафоров
@@ -239,7 +236,7 @@ int main()
 	}*/
 	
 	// shmget - создает новый разделяемый сегмент.
-	int shmid = shmget(IPC_PRIVATE, BUFFER_SIZE+2, IPC_CREAT | perms);
+	int shmid = shmget(IPC_PRIVATE, BUFFER_SIZE+1, IPC_CREAT | perms);
 	if (shmid == -1)
 	{
 		perror("shmget error\n");
@@ -263,13 +260,12 @@ int main()
 		for (int i = 0; i < BUFFER_SIZE; i++)
 			buffer[i] = '0';
 	buffer[BUFFER_SIZE] = 'a'; //Чтобы записывать буквы по алфавиту
-	buffer[BUFFER_SIZE+1] = 0; //Чтобы считывать буквы по порядку
 		
-	if (!printBuf())
+	/*if (!printBuf())
 	{
 		perror("buffer == NULL");
 		return 1;
-	}
+	}*/
 	
 	//Саздаём производителей и потребителей
 	for (int i = 0; i < 3; i++)
@@ -283,11 +279,11 @@ int main()
 	for (int i = 0; i < 3*2; i++)
 	{
 		wait(&status);
-		if (!printBuf())
+		/*if (!printBuf())
 		{
 			perror("buffer == NULL");
 			return 1;
-		}
+		}*/
 	}
 	
 	/*strcpy(buffer, "Hello");
