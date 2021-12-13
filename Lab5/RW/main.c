@@ -46,20 +46,27 @@ int printVal()
 		return 0;
 }
 
-struct sembuf start_read[5] =
+/*struct sembuf start_read[5] =
 {
 	{CAN_READ, 1, 0},
 	{ACTIVE_WRITER, 0, 0},
 	{CAN_WRITE, 0, 0},
 	{ACTIVE_READERS, 1, 0},
 	{CAN_READ, -1, 0}
+};*/
+
+struct sembuf start_read[3] =
+{
+	{CAN_READ, 1, 0},
+	{ACTIVE_WRITER, 0, 0},
+	{CAN_WRITE, 0, 0},
 };
 
-/*struct sembuf started_reading[2] =
+struct sembuf started_reading[2] =
 {
 	{ACTIVE_READERS, 1, 0},
 	{CAN_READ, -1, 0}
-};*/
+};
 
 struct sembuf stop_read[1] =
 {
@@ -74,7 +81,7 @@ void reader(int r_id, int delay)
 	{
 		usleep(delay);
 		
-		/*if (semop(semid, start_read, 3) == -1)
+		if (semop(semid, start_read, 3) == -1)
 		{
 			perror("start_read semop error\n");
 			exit(1);
@@ -86,15 +93,15 @@ void reader(int r_id, int delay)
 		{
 			perror("started_reading semop error\n");
 			exit(1);
-		}*/
+		}
 		
-		if (semop(semid, start_read, 5) == -1)
+		/*if (semop(semid, start_read, 5) == -1)
 		{
 			perror("start_read semop error\n");
 			exit(1);
 		}
 		
-		printf("Читатель %d начал читать\n", r_id);
+		printf("Читатель %d начал читать\n", r_id);*/
 		
 		printf("Читатель %d считал значение: %d\n", r_id, *value);
 		
@@ -107,11 +114,24 @@ void reader(int r_id, int delay)
 	}
 }
 
-struct sembuf start_write[5] =
+/*struct sembuf start_write[5] =
 {
 	{CAN_WRITE, 1, 0},
 	{ACTIVE_READERS, 0, 0},
 	{ACTIVE_WRITER, 0, 0},
+	{ACTIVE_WRITER, 1, 0},
+	{CAN_WRITE, -1, 0}
+};*/
+
+struct sembuf start_write[3] =
+{
+	{CAN_WRITE, 1, 0},
+	{ACTIVE_READERS, 0, 0},
+	{ACTIVE_WRITER, 0, 0}
+};
+
+struct sembuf started_writing[2] =
+{
 	{ACTIVE_WRITER, 1, 0},
 	{CAN_WRITE, -1, 0}
 };
@@ -130,13 +150,27 @@ void writer(int r_id, int delay)
 	{
 		usleep(delay);
 		
-		if (semop(semid, start_write, 5) == -1)
+		if (semop(semid, start_write, 3) == -1)
 		{
 			perror("start_write semop error\n");
 			exit(1);
 		}
 		
 		printf("Писатель %d начал писать\n", r_id);
+		
+		if (semop(semid, started_writing, 2) == -1)
+		{
+			perror("started_writing semop error\n");
+			exit(1);
+		}
+		
+		/*if (semop(semid, start_write, 5) == -1)
+		{
+			perror("start_write semop error\n");
+			exit(1);
+		}
+		
+		printf("Писатель %d начал писать\n", r_id);*/
 		
 		printf("Писатель %d записал значение: %d\n", r_id, ++*value);
 		
