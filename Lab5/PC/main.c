@@ -54,15 +54,15 @@ int printBuf()
 //P (proberen – проверять)
 struct sembuf ProducerP[2] =
 {
-	{BUFFER_EMPTY, -1, 0}, // Ожидает освобождения хотя бы одной ячейки буфера.
-	{BIN_SEM, -1, 0}  // Ожидает, пока другой производитель или потребитель выйдет из критической зоны.
+	{BUFFER_EMPTY, -1, 0},
+	{BIN_SEM, -1, 0}
 };
 
 //V (verhogen – увеличивать)
 struct sembuf ProducerV[2] =
 {
-	{BUFFER_FULL, 1, 0},  // Увеличивает кол-во заполненных ячеек.
-	{BIN_SEM, 1, 0} // Освобождает критическую зону.
+	{BUFFER_FULL, 1, 0},
+	{BIN_SEM, 1, 0}
 };
 
 void producer(int prod_id, int delay)
@@ -127,15 +127,15 @@ void producer(int prod_id, int delay)
 //P (proberen – проверять)
 struct sembuf ConsumerP[2] =
 {
-	{BUFFER_FULL, -1, 0}, // Ожидает освобождения хотя бы одной ячейки буфера.
-	{BIN_SEM, -1, 0}  // Ожидает, пока другой производитель или потребитель выйдет из критической зоны.
+	{BUFFER_FULL, -1, 0},
+	{BIN_SEM, -1, 0}
 };
 
 //V (verhogen – увеличивать)
 struct sembuf ConsumerV[2] =
 {
-	{BUFFER_EMPTY, 1, 0},  // Увеличивает кол-во заполненных ячеек.
-	{BIN_SEM, 1, 0} // Освобождает критическую зону.
+	{BUFFER_EMPTY, 1, 0},
+	{BIN_SEM, 1, 0}
 };
 
 void consumer(int cons_id, int delay)
@@ -235,7 +235,6 @@ int main()
         return 1;
 	}*/
 	
-	// shmget - создает новый разделяемый сегмент.
 	int shmid = shmget(IPC_PRIVATE, BUFFER_SIZE+1, IPC_CREAT | perms);
 	if (shmid == -1)
 	{
@@ -267,7 +266,7 @@ int main()
 		return 1;
 	}*/
 	
-	//Саздаём производителей и потребителей
+	//Создаём производителей и потребителей
 	for (int i = 0; i < 3; i++)
 	{
 		createChild(i+1, &producer);
@@ -284,72 +283,7 @@ int main()
 			perror("buffer == NULL");
 			return 1;
 		}*/
-	}
-	
-	/*strcpy(buffer, "Hello");
-	if (shmdt(buffer) == -1)
-		perror("shmdt");
-	return 0;*/
-
-    /*char *buffer;
-	if ((buffer = shmat(shmid, NULL, 0)) == (void *)-1)
-	{
-        perror("shmat error\n");
-        return EXIT_FAILURE;
-    }*/
-	
-	
-	/*int perms = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-
-    
-	
-	
-	// shmget - создает новый разделяемый сегмент.
-	int shmid = shmget(IPC_PRIVATE, shm_size, perms);
-	if (shmid == -1)
-	{
-		perror("shmget error\n");
-        return 1;
-	}
-	
-	// Функция shmat() возвращает указатель на сегмент
-	// shmbuffer (второй аргумент) равно NULL,
-	// то система выбирает подходящий (неиспользуемый)
-	// адрес для подключения сегмента
-	int *adrs = shmat(shmid, NULL, 0);
-	if (*(char *)adrs == -1)
-	{
-		perror("shmat error");
-		return 1;
-	}
-	
-	// В начале разделяемой памяти хранится
-	// producer_pos и consumer_pos
-	producer_pos = adrs;
-	(*producer_pos) = 0;
-	consumer_pos = adrs + sizeof(int);
-	(*consumer_pos) = 0;
-	// Начиная с buffer уже хранятся данные
-	buffer = (char *)(adrs + 2 * sizeof(int));
-	
-	//Заполним буффер нулями
-	for (int i = 0; i < N; i++)
-		buffer[i] = '0';
-	
-	//Создаем набор из 3 семафоров
-	int fd = semget(IPC_PRIVATE, 3, IPC_CREAT|perms);
-    if (fd == -1) //Набор создать не удалось
-    {
-        perror("semget error\n");
-        return 1;
-    }
-    //Если удачно, то выполняем semop() присваиваем начальные значения
-    if (semop(fd, init, 3) == -1) //передаём
-	{
-		perror("semop error\n");
-        return 1;
-	}*/
-	
+	}	
 
 	printf("ended\n");
     return 0;
