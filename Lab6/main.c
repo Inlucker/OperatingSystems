@@ -56,7 +56,9 @@ DWORD WINAPI reader(CONST LPVOID lpParams)
 
         //printf("Reader %d started reading\n", r_id);
 
+        WaitForSingleObject(hMutex, INFINITE);
         printf("Reader %d have read: %d\n", r_id, value);
+        ReleaseMutex(hMutex);
 
         stop_read();
 
@@ -99,8 +101,9 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
         start_write();
 
         //printf("Writer %d started writing\n", w_id);
-
+        WaitForSingleObject(hMutex, INFINITE);
         printf("Writer %d have written: %d\n", w_id, ++value);
+        ReleaseMutex(hMutex);
 
         stop_write();
 
