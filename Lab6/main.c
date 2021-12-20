@@ -3,7 +3,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define THREADS_NUMBER 3
+#define THREADS_NUMBER 30
 #define ITERATIONS 10
 
 long active_readers = 0;
@@ -31,16 +31,14 @@ void start_read()
 {
     //WaitForSingleObject(hMutex, INFINITE);
     InterlockedIncrement(&readers_queue);
-    //printf("active_writer = %d\n", active_writer); //Если добавить этот принт с использованием bool, будет вечный lock
+    //printf("active_writer = %d\n", active_writer); //Если добавить этот принт с использованием bool, будет вечный lock //FIXED
     if (active_writer || writers_queue > 0)
-        ResetEvent(can_read);
+        WaitForSingleObject(can_read, INFINITE);
+    //ResetEvent(can_read); //Не нужно потому что автосброс
     //ReleaseMutex(hMutex);
 
-    WaitForSingleObject(can_read, INFINITE);
-
     WaitForSingleObject(hMutex, INFINITE); //Не спорь!!!
-    //Видимо мьютекс нужен только здесь, потому что здесь идёт две подряд неделимые операции
-    //Критическая секция
+    //Видимо мьютекс нужен только здесь, потому что здесь идёт две подряд неделимые операции (Для монопольного доступа)
     InterlockedDecrement(&readers_queue);
     InterlockedIncrement(&active_readers);
     SetEvent(can_read);
@@ -140,12 +138,12 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
     ExitThread(0); //return 0;
 }
 
-#define TEST_ITERS 1
+#define TEST_ITERS 100
 
 int main()
 {
     srand(time(NULL));
-    can_read = CreateEvent(NULL, TRUE, FALSE, NULL);
+    can_read = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (NULL == can_read)
         perror("Failed to create event can_read");
 
