@@ -7,7 +7,7 @@
 #define ITERATIONS 10
 
 long active_readers = 0;
-bool active_writer = false;
+long active_writer = 0;
 HANDLE can_read;
 HANDLE can_write;
 
@@ -27,7 +27,6 @@ void start_read()
 {
     //WaitForSingleObject(hMutex, INFINITE);
     InterlockedIncrement(&readers_queue);
-    printf("active_writer = %d\n", active_writer);
     if (active_writer || writers_queue > 0)
         ResetEvent(can_read);
     WaitForSingleObject(can_read, INFINITE);
@@ -39,7 +38,6 @@ void start_read()
 void stop_read()
 {
     InterlockedDecrement(&active_readers);
-    //printf("active_readers = %ld\n", active_readers);
     if (active_readers == 0)
         SetEvent(can_write);
 }
@@ -76,13 +74,12 @@ void start_write()
         ResetEvent(can_write);
     WaitForSingleObject(can_write, INFINITE);
     InterlockedDecrement(&writers_queue);
-    active_writer = true;
+    InterlockedIncrement(&active_writer); //active_writer = true;
 }
 
 void stop_write()
 {
-    active_writer = false;
-    //printf("readers_queue = %ld\n", readers_queue);
+    InterlockedDecrement(&active_writer); //active_writer = false;
     if (readers_queue > 0)
         SetEvent(can_read);
     else
