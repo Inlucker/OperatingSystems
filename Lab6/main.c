@@ -3,7 +3,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define THREADS_NUMBER 30
+#define THREADS_NUMBER 3
 #define ITERATIONS 10
 
 long active_readers = 0;
@@ -125,9 +125,9 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
         start_write();
 
         //printf("Writer %d started writing\n", w_id);
-        WaitForSingleObject(hMutex, INFINITE);
+        //WaitForSingleObject(hMutex, INFINITE); //Не нужно, видимо потому что писатель имеет монопольный доступ
         printf("Writer %d have written: %d\n", w_id, ++value);
-        ReleaseMutex(hMutex);
+        //ReleaseMutex(hMutex);
 
         stop_write();
 
@@ -138,7 +138,7 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
     ExitThread(0); //return 0;
 }
 
-#define TEST_ITERS 100
+#define TEST_ITERS 1
 
 int main()
 {
