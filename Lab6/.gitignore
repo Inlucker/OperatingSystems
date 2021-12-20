@@ -71,10 +71,3 @@ Thumbs.db
 *.dll
 *.exe
 
-# More...
-
-#*.pro
-
-/debug
-/release
-/build*
