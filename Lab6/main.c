@@ -7,8 +7,8 @@
 #define ITERATIONS 10
 
 long active_readers = 0;
-//long active_writer = 0;
-bool active_writer = false;
+long active_writer = 0; //long лучше не использовать (хотябы int)
+//bool active_writer = false; //bool приняли у одногрупниц
 HANDLE can_read;
 HANDLE can_write;
 
@@ -17,6 +17,9 @@ long readers_queue = 0;
 long writers_queue = 0;
 
 int value = 0;
+
+HANDLE reader_params_recieved;
+HANDLE writer_params_recieved;
 
 struct params
 {
@@ -28,6 +31,7 @@ void start_read()
 {
     //WaitForSingleObject(hMutex, INFINITE);
     InterlockedIncrement(&readers_queue);
+    //printf("active_writer = %d\n", active_writer); //Если добавить этот принт с использованием bool, будет вечный lock
     if (active_writer || writers_queue > 0)
         ResetEvent(can_read);
     //ReleaseMutex(hMutex);
@@ -35,6 +39,7 @@ void start_read()
     WaitForSingleObject(can_read, INFINITE);
 
     WaitForSingleObject(hMutex, INFINITE); //Не спорь!!!
+    //Видимо мьютекс нужен только здесь, потому что здесь идёт две подряд неделимые операции
     //Критическая секция
     InterlockedDecrement(&readers_queue);
     InterlockedIncrement(&active_readers);
@@ -56,6 +61,7 @@ DWORD WINAPI reader(CONST LPVOID lpParams)
     struct params *r = lpParams;
     int r_id = r->id; //(int)(lpParams);
     int delay = r->delay; //(int)(lpParams+sizeof(int)); //rand() % 3000 + 1000;
+    SetEvent(reader_params_recieved); //!для того чтобы главный поток продолжил создавать потоки
     //printf("Thread: Reader %d delay = %d\n", r_id, delay);
     for (int j = 0; j < ITERATIONS; j++)
     {
@@ -90,16 +96,16 @@ void start_write()
 
     //WaitForSingleObject(hMutex, INFINITE);
     InterlockedDecrement(&writers_queue);
-    //InterlockedIncrement(&active_writer);
-    active_writer = true;
+    InterlockedIncrement(&active_writer);
+    //active_writer = true; //По идее это опасно
     //ReleaseMutex(hMutex);
 }
 
 void stop_write()
 {
     //WaitForSingleObject(hMutex, INFINITE);
-    //InterlockedDecrement(&active_writer);
-    active_writer = false;
+    InterlockedDecrement(&active_writer);
+    //active_writer = false; //По идее это опасно
     if (readers_queue > 0)
         SetEvent(can_read);
     else
@@ -112,6 +118,7 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
     struct params *w = lpParams;
     int w_id = w->id; //(int)(lpParams);
     int delay = w->delay; //(int)(lpParams+sizeof(int)); //rand() % 3000 + 1000;
+    SetEvent(writer_params_recieved);  //!для того чтобы главный поток продолжил создавать потоки
     //printf("Thread: Writer %d delay = %d\n", w_id, delay);
     for (int j = 0; j < ITERATIONS; j++)
     {
@@ -120,9 +127,9 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
         start_write();
 
         //printf("Writer %d started writing\n", w_id);
-        //WaitForSingleObject(hMutex, INFINITE);
+        WaitForSingleObject(hMutex, INFINITE);
         printf("Writer %d have written: %d\n", w_id, ++value);
-        //ReleaseMutex(hMutex);
+        ReleaseMutex(hMutex);
 
         stop_write();
 
@@ -133,7 +140,7 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
     ExitThread(0); //return 0;
 }
 
-#define TEST_ITERS 100
+#define TEST_ITERS 1
 
 int main()
 {
@@ -150,6 +157,14 @@ int main()
     if (NULL == hMutex)
         perror("Failed to create mutex");
 
+    //!Вам это вам не нужно!!! Я добавил это для того чтобы главный поток ждал пока другие считывают параметры
+    reader_params_recieved = CreateEvent(NULL, FALSE, TRUE, NULL);
+    if (NULL == reader_params_recieved)
+        perror("Failed to create event reader_params_recieved");
+    writer_params_recieved = CreateEvent(NULL, FALSE, TRUE, NULL);
+    if (NULL == writer_params_recieved)
+        perror("Failed to create event writer_params_recieved");
+
     HANDLE hReaders[THREADS_NUMBER];
     HANDLE hWriters[THREADS_NUMBER];
 
@@ -157,11 +172,13 @@ int main()
     {
         for (int i = 0; i < THREADS_NUMBER; i++)
         {
-            struct params r = {i+1, rand()%300+100};
-            printf("Main: Reader %d delay = %d\n", r.id, r.delay);
+            WaitForSingleObject(reader_params_recieved, INFINITE); //!Для того чтобы поток читателя успел считать все параметры
+            struct params r = {i+1, rand()%30+10};
+            //printf("Main: Reader %d delay = %d\n", r.id, r.delay); // без принта, получаются неправильные id
             hReaders[i] = CreateThread(NULL, 0, &reader, &r, 0, NULL);
-            struct params w = {i+1, rand()%300+100};
-            printf("Main: Writer %d delay = %d\n", w.id, w.delay);
+            WaitForSingleObject(writer_params_recieved, INFINITE); //!Для того чтобы поток писателя успел считать все параметры
+            struct params w = {i+1, rand()%30+10};
+            //printf("Main: Writer %d delay = %d\n", w.id, w.delay); // Это потому что объект структуры params успевает измениться, а адресс тот же самый
             hWriters[i] = CreateThread(NULL, 0, &writer, &w, 0, NULL);
         }
 
