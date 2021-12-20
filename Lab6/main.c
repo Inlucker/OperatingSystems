@@ -26,19 +26,20 @@ struct params
 void start_read()
 {
     //WaitForSingleObject(hMutex, INFINITE);
-    readers_queue++; //InterlockedIncrement(&readers_queue);
+    InterlockedIncrement(&readers_queue);
+    printf("active_writer = %d\n", active_writer);
     if (active_writer || writers_queue > 0)
         ResetEvent(can_read);
     WaitForSingleObject(can_read, INFINITE);
-    readers_queue--; //InterlockedDecrement(&readers_queue);
-    active_readers++; //InterlockedIncrement(&active_readers);
+    InterlockedDecrement(&readers_queue);
+    InterlockedIncrement(&active_readers);
     SetEvent(can_read);
 }
 
 void stop_read()
 {
-    active_readers--; //InterlockedDecrement(&active_readers);
-    printf("active_readers = %ld\n", active_readers);
+    InterlockedDecrement(&active_readers);
+    //printf("active_readers = %ld\n", active_readers);
     if (active_readers == 0)
         SetEvent(can_write);
 }
@@ -70,18 +71,18 @@ DWORD WINAPI reader(CONST LPVOID lpParams)
 
 void start_write()
 {
-    writers_queue++; //InterlockedIncrement(&writers_queue);
+    InterlockedIncrement(&writers_queue);
     if (active_readers > 0 || active_writer)
         ResetEvent(can_write);
     WaitForSingleObject(can_write, INFINITE);
-    writers_queue--; //InterlockedDecrement(&writers_queue);
+    InterlockedDecrement(&writers_queue);
     active_writer = true;
 }
 
 void stop_write()
 {
     active_writer = false;
-    printf("readers_queue = %ld\n", readers_queue);
+    //printf("readers_queue = %ld\n", readers_queue);
     if (readers_queue > 0)
         SetEvent(can_read);
     else
