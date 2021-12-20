@@ -54,7 +54,7 @@ DWORD WINAPI reader(CONST LPVOID lpParams)
     struct params *r = lpParams;
     int r_id = r->id; //(int)(lpParams);
     int delay = r->delay; //(int)(lpParams+sizeof(int)); //rand() % 3000 + 1000;
-    printf("Thread: Reader %d delay = %d\n", r_id, delay);
+    //printf("Thread: Reader %d delay = %d\n", r_id, delay);
     for (int j = 0; j < ITERATIONS; j++)
     {
         Sleep(delay);
@@ -72,7 +72,7 @@ DWORD WINAPI reader(CONST LPVOID lpParams)
         //printf("Reader %d stoped reading\n", r_id);
     }
 
-    printf("Reader %d ended\n", r_id);
+    //printf("Reader %d ended\n", r_id);
     return 0;
 }
 
@@ -108,7 +108,7 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
     struct params *w = lpParams;
     int w_id = w->id; //(int)(lpParams);
     int delay = w->delay; //(int)(lpParams+sizeof(int)); //rand() % 3000 + 1000;
-    printf("Thread: Writer %d delay = %d\n", w_id, delay);
+    //printf("Thread: Writer %d delay = %d\n", w_id, delay);
     for (int j = 0; j < ITERATIONS; j++)
     {
         Sleep(delay);
@@ -125,9 +125,11 @@ DWORD WINAPI writer(CONST LPVOID lpParams)
         //printf("Writer %d stoped writing\n", w_id);
     }
 
-    printf("Writer %d ended\n", w_id);
+    //printf("Writer %d ended\n", w_id);
     return 0;
 }
+
+#define TEST_ITERS 100
 
 int main()
 {
@@ -147,15 +149,15 @@ int main()
     HANDLE hReaders[THREADS_NUMBER];
     HANDLE hWriters[THREADS_NUMBER];
 
-    for (int j = 0; j < 100; j++)
+    for (int j = 0; j < TEST_ITERS; j++)
     {
         for (int i = 0; i < THREADS_NUMBER; i++)
         {
             struct params r = {i+1, rand()%300+100};
-            printf("Main: Reader %d delay = %d\n", r.id, r.delay);
+            //printf("Main: Reader %d delay = %d\n", r.id, r.delay);
             hReaders[i] = CreateThread(NULL, 0, &reader, &r, 0, NULL);
             struct params w = {i+1, rand()%300+100};
-            printf("Main: Writer %d delay = %d\n", w.id, w.delay);
+            //printf("Main: Writer %d delay = %d\n", w.id, w.delay);
             hWriters[i] = CreateThread(NULL, 0, &writer, &w, 0, NULL);
         }
 
