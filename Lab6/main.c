@@ -25,21 +25,28 @@ struct params
 
 void start_read()
 {
-    //WaitForSingleObject(hMutex, INFINITE);
-    InterlockedIncrement(&readers_queue);
+    WaitForSingleObject(hMutex, INFINITE);
+    readers_queue++; //InterlockedIncrement(&readers_queue);
     if (active_writer || writers_queue > 0)
         ResetEvent(can_read);
+    ReleaseMutex(hMutex);
+
     WaitForSingleObject(can_read, INFINITE);
-    InterlockedDecrement(&readers_queue);
-    InterlockedIncrement(&active_readers);
+
+    WaitForSingleObject(hMutex, INFINITE);
+    readers_queue--; //InterlockedDecrement(&readers_queue);
+    active_readers++; //InterlockedIncrement(&active_readers);
     SetEvent(can_read);
+    ReleaseMutex(hMutex);
 }
 
 void stop_read()
 {
-    InterlockedDecrement(&active_readers);
+    WaitForSingleObject(hMutex, INFINITE);
+    active_readers--; //InterlockedDecrement(&active_readers);
     if (active_readers == 0)
         SetEvent(can_write);
+    ReleaseMutex(hMutex);
 }
 
 DWORD WINAPI reader(CONST LPVOID lpParams)
@@ -71,21 +78,29 @@ DWORD WINAPI reader(CONST LPVOID lpParams)
 
 void start_write()
 {
-    InterlockedIncrement(&writers_queue);
+    WaitForSingleObject(hMutex, INFINITE);
+    writers_queue++; //InterlockedIncrement(&writers_queue);
     if (active_readers > 0 || active_writer)
         ResetEvent(can_write);
+    ReleaseMutex(hMutex);
+
     WaitForSingleObject(can_write, INFINITE);
-    InterlockedDecrement(&writers_queue);
-    InterlockedIncrement(&active_writer); //active_writer = true;
+
+    WaitForSingleObject(hMutex, INFINITE);
+    writers_queue--; //InterlockedDecrement(&writers_queue);
+    active_writer++; //InterlockedIncrement(&active_writer); //active_writer = true;
+    ReleaseMutex(hMutex);
 }
 
 void stop_write()
 {
-    InterlockedDecrement(&active_writer); //active_writer = false;
+    WaitForSingleObject(hMutex, INFINITE);
+    active_writer--; //InterlockedDecrement(&active_writer); //active_writer = false;
     if (readers_queue > 0)
         SetEvent(can_read);
     else
         SetEvent(can_write);
+    ReleaseMutex(hMutex);
 }
 
 DWORD WINAPI writer(CONST LPVOID lpParams)
