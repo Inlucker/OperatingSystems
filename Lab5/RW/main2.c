@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 
 #define ACTIVE_READERS 0
-#define ACTIVE_WRITER 1
+#define BIN_SEM 1
 //#define CAN_READ 2
 #define CAN_WRITE 2
 
@@ -46,10 +46,11 @@ int printVal()
 		return 0;
 }
 
-struct sembuf start_read[3] =
+struct sembuf start_read[4] =
 {
 	//{CAN_READ, 1, 0},
-	{ACTIVE_WRITER, 0, 0},
+	{BIN_SEM, -1, 0},
+	{BIN_SEM, 1, 0},
 	{CAN_WRITE, 0, 0},
 	{ACTIVE_READERS, 1, 0}
 	//{CAN_READ, -1, 0}
@@ -62,13 +63,14 @@ struct sembuf stop_read[1] =
 
 void reader(int r_id, int delay)
 {
+	//delay*=10;
 	//delay = 1000000;
-	//printf("Читатель %d delay = %d\n", prod_id, delay);
+	//printf("Читатель %d delay = %d\n", r_id, delay);
 	for (int j = 0; j < ITERATIONS; j++)
 	{
 		usleep(delay);
 		
-		if (semop(semid, start_read, 3) == -1)
+		if (semop(semid, start_read, 4) == -1)
 		{
 			perror("start_read semop error\n");
 			exit(1);
@@ -77,57 +79,66 @@ void reader(int r_id, int delay)
 		//printf("Читатель %d начал читать\n", r_id);
 		
 		printf("Читатель %d считал значение: %d\n", r_id, *value);
+		//usleep(delay*10);
 		
 		if (semop(semid, stop_read, 1) == -1)
 		{
 			perror("stop_read semop error\n");
 			exit(1);
-		}	
+		}
+		//printGetAll();
 		//printf("Читатель %d перестал читать\n", r_id);
 	}
+	//printf("Читатель %d заврешился\n", r_id);
+	//printGetAll();
+
 }
 
-struct sembuf start_write[5] =
+struct sembuf start_write[4] =
 {
 	{CAN_WRITE, 1, 0},
 	{ACTIVE_READERS, 0, 0},
-	{ACTIVE_WRITER, 0, 0},
-	{ACTIVE_WRITER, 1, 0},
+	{BIN_SEM, -1, 0},
 	{CAN_WRITE, -1, 0}
 };
 
 struct sembuf stoped_writing[1] =
 {
-	{ACTIVE_WRITER, -1, 0}
+	{BIN_SEM, 1, 0}
 };
 
 
-void writer(int r_id, int delay)
+void writer(int w_id, int delay)
 {
+	//delay*=10;
 	//delay = 5000000;
-	//printf("Писатель %d delay = %d\n", prod_id, delay);
+	//printf("Писатель %d delay = %d\n", w_id, delay);
 	for (int j = 0; j < ITERATIONS; j++)
 	{
 		usleep(delay);
 		
-		if (semop(semid, start_write, 5) == -1)
+		if (semop(semid, start_write, 4) == -1)
 		{
 			perror("start_write semop error\n");
 			exit(1);
 		}
 		
-		//printf("Писатель %d начал писать\n", r_id);
+		//printf("Писатель %d начал писать\n", w_id);
 		
-		printf("Писатель %d записал значение: %d\n", r_id, ++*value);
+		printf("Писатель %d записал значение: %d\n", w_id, ++*value);
+		//usleep(delay*10);
 		
 		if (semop(semid, stoped_writing, 1) == -1)
 		{
 			perror("stoped_writing semop error\n");
 			exit(1);
-		}	
+		}
+		//printGetAll();
 		
-		//printf("Писатель %d перестал писать\n", r_id);			
+		//printf("Писатель %d перестал писать\n", w_id);			
 	}
+	//printf("Писатель %d заврешился\n", w_id);
+	//printGetAll();
 }
 
 int createChild(int cid, void (*fptr)(int, int))
@@ -148,6 +159,7 @@ int createChild(int cid, void (*fptr)(int, int))
 
 int main()
 {	
+	srand(time(NULL));
 	int perms = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 	//Создаем набор из 3 семафоров
 	semid = semget(IPC_PRIVATE, 3, IPC_CREAT | perms);
@@ -158,7 +170,7 @@ int main()
     }
 	
 	//Инициализация семафоров //Необязательно
-	ushort array[3]= {0, 0, 0}; 
+	ushort array[3]= {0, 1, 0}; 
 	if (semctl(semid, 0, SETALL, array) == -1)
     {
         perror("semctl SETALL error\n");
